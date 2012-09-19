@@ -1,0 +1,53 @@
+<?php
+
+/**
+ * Implements hook_help().
+ */
+function nodelines_help($path, $arg) {
+  switch ($path) {
+    case 'admin/help#nodelines':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('Nodelines creates a field formatter for adding line numbers to a Long Text field.') . '</p>';
+      return $output;
+  }
+}
+/**
+ * Implements hook_field_formatter_info().
+ */
+function nodelines_field_formatter_info() {
+  return array(
+    'nodelines' => array(
+      'label' => t('Nodelines'),
+      'field types' => array('text_long','text_with_summary'),
+    ),
+  );
+}
+/**
+ * Implements hook_field_formatter_view().
+ */
+function nodelines_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+  $element = array();
+  $settings = $display['settings'];
+  $lines = substr_count($items[0]['value'], '\n');
+  switch ($display['type']) {
+    case 'nodelines':
+      foreach ($items as $delta => $item) {
+        $element[$delta] = array('#markup' => strip_tags($item['value']));
+        $lines_arr = preg_split('/\n/', $element[$delta]['#markup']);
+        $i = 1;
+        // Empty the markup so that it can be refilled
+        // line by line, start the <pre> wrapper.
+        $element[$delta]['#markup'] = '<pre>';
+        foreach ($lines_arr as &$value) {
+          $value = $i . '| ' . $value;
+          $element[$delta]['#markup'] .= $value;
+          $i++;
+        }
+        $element[$delta]['#markup'] .= '</pre>';
+      }
+      break;
+  }
+  return $element;
+}
+?>

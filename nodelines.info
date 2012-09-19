@@ -1,0 +1,3 @@
+name = Nodelines
+description = Provides a textfield widget which displays line numbers.
+core = 7.x
