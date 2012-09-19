@@ -8,7 +8,7 @@ function nodelines_help($path, $arg) {
     case 'admin/help#nodelines':
       $output = '';
       $output .= '<h3>' . t('About') . '</h3>';
-      $output .= '<p>' . t('Nodelines creates a field formatter for adding line numbers to a Long Text field.') . '</p>';
+      $output .= '<p>' . t('Nodelines creates a field formatter for adding line numbers to Long Text fields. Currently, Nodelines strips html tags from field input and wraps everyting in <pre> tags, similar to the Plain Text formatter. Plans for development include removing this function to allow html elements to be output with line numbers.') . '</p>';
       return $output;
   }
 }
