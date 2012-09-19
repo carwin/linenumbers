@@ -19,7 +19,7 @@ function nodelines_field_formatter_info() {
   return array(
     'nodelines' => array(
       'label' => t('Nodelines'),
-      'field types' => array('text_long','text_with_summary'),
+      'field types' => array('text_long', 'text_with_summary'),
     ),
   );
 }
@@ -50,4 +50,3 @@ function nodelines_field_formatter_view($entity_type, $entity, $field, $instance
   }
   return $element;
 }
-?>
