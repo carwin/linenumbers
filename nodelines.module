@@ -53,7 +53,7 @@ function nodelines_field_formatter_view($entity_type, $entity, $field, $instance
         }
 
         // If <code> is chosen in the settings, each line needs to be wrapped,
-        // which means that #markup needs to be emptied so it can be 
+        // which means that #markup needs to be emptied so it can be
         // reformatted line by line.
         else {
           $element[$delta]['#markup'] = '';
@@ -70,7 +70,7 @@ function nodelines_field_formatter_view($entity_type, $entity, $field, $instance
           if ($settings['html_wrapper'] == 'code') {
             $element[$delta]['#markup'] .= '</code><br />';
           }
-          
+
           $i++;
         }
 
@@ -90,7 +90,6 @@ function nodelines_field_formatter_view($entity_type, $entity, $field, $instance
  * Implements hook_field_formatter_settings_form().
  */
 function nodelines_field_formatter_settings_form($field, $instance, $view_mode, $form, &$form_state) {
-dpm($instance);
 
   // Follow the format of the text module since it is similar.
   $display = $instance['display'][$view_mode];
@@ -125,8 +124,7 @@ function nodelines_field_formatter_settings_summary($field, $instance, $view_mod
 
   if ($display['type'] == 'nodelines') {
     $summary = t('HTML wrapper') . ':' . $settings['html_wrapper'];
-  } 
+  }
 
   return $summary;
 }
-
