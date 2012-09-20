@@ -94,7 +94,7 @@ function nodelines_field_formatter_settings_form($field, $instance, $view_mode, 
   // Follow the format of the text module since it is similar.
   $display = $instance['display'][$view_mode];
   $settings = $display['settings'];
-  
+
   $element = array();
   if ($display['type'] == 'nodelines') {
 
