@@ -2,18 +2,18 @@
 
 /**
  * @file
- * Nodelines core functions.
+ * Linenumbers core functions.
  */
 
 /**
  * Implements hook_help().
  */
-function nodelines_help($path, $arg) {
+function linenumbers_help($path, $arg) {
   switch ($path) {
-    case 'admin/help#nodelines':
+    case 'admin/help#linenumbers':
       $output = '';
       $output .= '<h3>' . t('About') . '</h3>';
-      $output .= '<p>' . t('Nodelines creates a field formatter for adding line numbers to Long Text fields. Currently, Nodelines strips html tags from field input and wraps everyting in <pre> tags, similar to the Plain Text formatter. Plans for development include removing this function to allow html elements to be output with line numbers.') . '</p>';
+      $output .= '<p>' . t('Linenumbers creates a field formatter for adding line numbers to Long Text fields. Currently, Nodelines strips html tags from field input and wraps everyting in <pre> tags, similar to the Plain Text formatter. Plans for development include removing this function to allow html elements to be output with line numbers.') . '</p>';
       return $output;
   }
 }
@@ -21,10 +21,10 @@ function nodelines_help($path, $arg) {
 /**
  * Implements hook_field_formatter_info().
  */
-function nodelines_field_formatter_info() {
+function linenumbers_field_formatter_info() {
   return array(
-    'nodelines' => array(
-      'label' => t('Nodelines'),
+    'linenumbers' => array(
+      'label' => t('Linenumbers'),
       'field types' => array('text_long', 'text_with_summary'),
       'settings' => array(
         'html_wrapper' => 'pre',
@@ -36,12 +36,12 @@ function nodelines_field_formatter_info() {
 /**
  * Implements hook_field_formatter_view().
  */
-function nodelines_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+function linenumbers_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
   $element = array();
   $settings = $display['settings'];
   $lines = substr_count($items[0]['value'], '\n');
   switch ($display['type']) {
-    case 'nodelines':
+    case 'linenumbers':
       foreach ($items as $delta => $item) {
         $element[$delta] = array('#markup' => strip_tags($item['value']));
         $lines_arr = preg_split('/\n/', $element[$delta]['#markup']);
@@ -89,14 +89,14 @@ function nodelines_field_formatter_view($entity_type, $entity, $field, $instance
 /**
  * Implements hook_field_formatter_settings_form().
  */
-function nodelines_field_formatter_settings_form($field, $instance, $view_mode, $form, &$form_state) {
+function linenumbers_field_formatter_settings_form($field, $instance, $view_mode, $form, &$form_state) {
 
   // Follow the format of the text module since it is similar.
   $display = $instance['display'][$view_mode];
   $settings = $display['settings'];
 
   $element = array();
-  if ($display['type'] == 'nodelines') {
+  if ($display['type'] == 'linenumbers') {
 
     // Set up available options for wrapping content.
     $element['html_wrapper'] = array(
@@ -116,14 +116,16 @@ function nodelines_field_formatter_settings_form($field, $instance, $view_mode, 
 /**
  * Implements hook_field_formatter_settings_summary().
  */
-function nodelines_field_formatter_settings_summary($field, $instance, $view_mode) {
+function linenumbers_field_formatter_settings_summary($field, $instance, $view_mode) {
   $display = $instance['display'][$view_mode];
   $settings = $display['settings'];
 
   $summary = '';
 
-  if ($display['type'] == 'nodelines') {
-    $summary = t('HTML wrapper') . ':' . $settings['html_wrapper'];
+  if ($display['type'] == 'linenumbers') {
+    $summary = t('HTML wrapper: @html_wrapper', array(
+      '@html_wrapper' => $settings['html_wrapper'],
+    ));
   }
 
   return $summary;

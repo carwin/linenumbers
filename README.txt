@@ -1,8 +1,8 @@
 
 -- SUMMARY --
 
-Nodelines is a field formatter for Long Text fields which adds line 
-numbering to content.
+Linenumbers is a field formatter for Long Text fields which adds line 
+numbering to content. Future versions will include an input filter.
 
 This module is useful when implementations Syntax highlighter and 
 Geshi Filter are overkill and all you need is numbered lines for 
@@ -49,10 +49,13 @@ None.
 Q: All the content I input into this formatter comes out wrapped in a <pre>
    tag. Why?
 
-A: Currently, everything is wrapped in a <pre> tag to improve the display
-   of content after it has been passed through the Nodelines formatter.
-   Each line of text is prepended with it's line number so that the number
-   becomes part of the text. This is not a permanent situation.
+A: Currently, everything is wrapped in a <pre> tag by default to improve 
+   the display of content after it has been passed through the Linenumbers 
+   formatter. Each line of text is prepended with it's line number so that 
+   the number becomes part of the text. This is not a permanent situation.
+
+   To change this setting, modify the formatter settings and choose a different
+   wrapper.
 
 
 -- CONTACT --

@@ -1,0 +1,3 @@
+name = Linenumbers 
+description = Provides a field formatter which displays line numbers.
+core = 7.x
