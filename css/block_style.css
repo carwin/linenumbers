@@ -1,3 +1,7 @@
+.linenumbers {
+  display: block;
+  overflow: hidden;
+}
 .linenumbers aside {
   float: left;
   padding-left: .5rem;
