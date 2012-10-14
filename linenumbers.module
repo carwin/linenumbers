@@ -1,132 +1,137 @@
 <?php
-
 /**
- * @file
- * Linenumbers core functions.
+ * Implements hook_menu();
  */
-
-/**
- * Implements hook_help().
- */
-function linenumbers_help($path, $arg) {
-  switch ($path) {
-    case 'admin/help#linenumbers':
-      $output = '';
-      $output .= '<h3>' . t('About') . '</h3>';
-      $output .= '<p>' . t('Linenumbers creates a field formatter for adding line numbers to Long Text fields. Currently, Nodelines strips html tags from field input and wraps everyting in <pre> tags, similar to the Plain Text formatter. Plans for development include removing this function to allow html elements to be output with line numbers.') . '</p>';
-      return $output;
-  }
-}
-
-/**
- * Implements hook_field_formatter_info().
- */
-function linenumbers_field_formatter_info() {
-  return array(
-    'linenumbers' => array(
-      'label' => t('Linenumbers'),
-      'field types' => array('text_long', 'text_with_summary'),
-      'settings' => array(
-        'html_wrapper' => 'pre',
-      ),
-    ),
+function linenumbers_menu() {
+  $items['linenumbers/info'] = array(
+    'title' => 'Linenumbers',
+    'page callback' => _linenumbers_information(),
+    'access callback' => TRUE,
   );
+  return $items;
 }
 
 /**
- * Implements hook_field_formatter_view().
+ * Implements hook_filter_info();
  */
-function linenumbers_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
-  $element = array();
-  $settings = $display['settings'];
-  $lines = substr_count($items[0]['value'], '\n');
-  switch ($display['type']) {
-    case 'linenumbers':
-      foreach ($items as $delta => $item) {
-        $element[$delta] = array('#markup' => strip_tags($item['value']));
-        $lines_arr = preg_split('/\n/', $element[$delta]['#markup']);
-        $i = 1;
+function linenumbers_filter_info() {
+  $filters['linenumbers'] = array(
+    'title' => t('Linenumbers'),
+    'description' => t('Enable visible line numbers'),
+    'process callback' => '_linenumbers_filter_linenumbers_process',
+    'default settings' => array(
+      'linenumbers_display' => 0,
+      'linenumbers_elements' => 'p',
+    ),
+    'settings callback' => '_linenumbers_filter_linenumbers_settings',
+  );
+  return $filters;
+}
 
-        // Start the html wrapper from the settings form.
-        if ($settings['html_wrapper'] != 'code') {
-          $element[$delta]['#markup'] = '<' . $settings['html_wrapper'] . '>';
-        }
+/**
+ * Provide some information about Linenumbers
+ */
+function _linenumbers_information() {
+  $information = t('Information about Linenumbers goes here and is very useful.');
+  return $information;
+}
+/**
+ * Settings for the 'linenumbers' filter.
+ */
+function _linenumbers_filter_linenumbers_settings($form, $form_state, $filter, $format, $defaults) {
+  $settings['linenumbers_display'] = array(
+    '#title' => t('Display style'),
+    '#type' => 'select',
+    '#options' => array(
+      0 => t('inline'),
+      1 => t('block'),
+    ),
+    '#default_value' => isset($filter->settings['linenumbers_display']) ? $filter->settings['linenumbers_display'] : $defaults['linenumbers_display'],
+    '#description' => t('Display line numbers inline'),
+  ); 
+ $settings['linenumbers_elements'] = array(
+    '#title' => t('Choose HTML elements on which to add line numbers.'),
+    '#type' => 'textfield',
+    '#default_value' => 'p',
+    '#size' => 30,
+    '#required' => TRUE,
+    '#description' => t('Enter every element which should have a line number in the format: !format', array(
+      '!format' => '<code>p,address,li,h2,quote</code>',
+    )),
+  );
 
-        // If <code> is chosen in the settings, each line needs to be wrapped,
-        // which means that #markup needs to be emptied so it can be
-        // reformatted line by line.
-        else {
-          $element[$delta]['#markup'] = '';
-        }
+/**
+ * @todo
+ *  Create some sort of catch-all scenario where every new line
+ *  gets a number prepended to it. This is difficult without stripping
+ *  HTML tags out of the text entirely. Additionaly, front-end styling
+ *  may have some elements appearing inline, such as <li>
+ *
+ * $settings['linenumbers_all_block_elements'] = array(
+ *   '#title' => t('Show line numbers on all block level elements.'),
+ *   '#type' => 'checkbox',
+ *   '#default_value' => variable_get('linenumbers_all_block_elements', 0),
+ *   '#description' => t('If enabled, line numbers will be shown for every block-level HTML element.'),
+ * );
+ */
+ return $settings;
+}
 
-        // Loop over each line in $line_arr and prepend the line number to it.
-        // If the code wrapper is chosen via settings, wrap each line in <code>
-        foreach ($lines_arr as &$value) {
-          if ($settings['html_wrapper'] == 'code') {
-            $element[$delta]['#markup'] .= '<code>';
-          }
-          $value = $i . '| ' . $value;
-          $element[$delta]['#markup'] .= $value;
-          if ($settings['html_wrapper'] == 'code') {
-            $element[$delta]['#markup'] .= '</code><br />';
-          }
+/**
+ * Processing function for the 'linenumbers' filter.
+ */
+function _linenumbers_filter_linenumbers_process($text, $filter, $format) {
+  $content = ''; // Initialize the content.
+  $nums = 1; // Line numbers should start at 1.
+  //$numbered_elements = array(); // Initialize array for elements with numbers.
+  //$block_elements = array('address', 'blockquote','div','dl','fieldset','form','h1','h2','h3','h4','h5','h6','hr','ol','p','pre','table','ul');
+  //preg_match_all('#<([a-z]+|[a-z][0-9]+)(?: .*)?(?<![/|/ ])>#iU', $text, $content);
+  
+  // Add elements from linenumbers_elements to an array.
+  if(isset($filter->settings['linenumbers_elements'])) {
+    $numbered_elements = explode(',', $filter->settings['linenumbers_elements']);
+  }
 
-          $i++;
-        }
+  // Inline line numbers
+  if($filter->settings['linenumbers_display'] == 0) {  
+    
+    // Not using this stuff anymore, but might be useful.
+    //$lines = explode('<p>', $text); // Explode lines by paragraph. 
+    //$empty_line = array(''); // Create an empty array to diff against.
+    //$lines = array_diff($lines, $empty_line); // Remove false lines from array.
 
-        // Close up the html_wrapper.
-        if ($settings['html_wrapper'] != 'code') {
-          $element[$delta]['#markup'] .= '</' . $settings['html_wrapper'] . '>';
-        }
 
+    //testing
+    $numbered_element_count = count($numbered_elements);
+    $lines = new DOMDocument();
+    $lines->loadHTML($text);
+    $lines_xpath = new DOMXpath($lines);
+    $entries = $lines_xpath->evaluate('/html/body/*');
+
+    $arr = array();
+    foreach($entries as $entry) {
+      if(in_array($entry->tagName, $numbered_elements)) {
+        $utf8_value = utf8_decode($entry->nodeValue);
+        $arr[] = '<'.$entry->tagName .'>' . $nums . '| ' . $utf8_value . '</' . $entry->tagName . '>';
       }
-      break;
+      else {
+        $arr[] = '<' . $entry->tagName . '>' . $utf8_value . '</' . $entry->tagName.'>';
+      }
+      $nums++;
+    }
+
+    dsm($arr);
+    foreach($arr as $item) {
+      $content .= $item;
+    }
+    //endtesting
+
+    foreach($lines as $line) {
+      //$content .= '<p>' . $nums . '| ' . $line;
+      //$nums++;
+    }
   }
-
-  return $element;
+  dsm($lines);
+  return $content;
 }
-
-/**
- * Implements hook_field_formatter_settings_form().
- */
-function linenumbers_field_formatter_settings_form($field, $instance, $view_mode, $form, &$form_state) {
-
-  // Follow the format of the text module since it is similar.
-  $display = $instance['display'][$view_mode];
-  $settings = $display['settings'];
-
-  $element = array();
-  if ($display['type'] == 'linenumbers') {
-
-    // Set up available options for wrapping content.
-    $element['html_wrapper'] = array(
-      '#title' => t('HTML Wrapper'),
-      '#type' => 'select',
-      '#options' => array(
-        'pre' => t('pre'),
-        'code' => t('code'),
-      ),
-      '#default_value' => $settings['html_wrapper'],
-    );
-  }
-
-  return $element;
-}
-
-/**
- * Implements hook_field_formatter_settings_summary().
- */
-function linenumbers_field_formatter_settings_summary($field, $instance, $view_mode) {
-  $display = $instance['display'][$view_mode];
-  $settings = $display['settings'];
-
-  $summary = '';
-
-  if ($display['type'] == 'linenumbers') {
-    $summary = t('HTML wrapper: @html_wrapper', array(
-      '@html_wrapper' => $settings['html_wrapper'],
-    ));
-  }
-
-  return $summary;
-}
+?>
