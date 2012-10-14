@@ -1,8 +1,13 @@
 <?php
+function linenumbers_init() {
+  drupal_add_js(drupal_get_path('module', 'linenumbers') . '/linenumbers_block_style.js', array('weight' => 1));
+  drupal_add_css(drupal_get_path('module', 'linenumbers') . '/css/block_style.css');
+}
 /**
  * Implements hook_menu();
  */
 function linenumbers_menu() {
+
   $items['linenumbers/info'] = array(
     'title' => 'Linenumbers',
     'page callback' => _linenumbers_information(),
@@ -19,9 +24,8 @@ function linenumbers_filter_info() {
     'title' => t('Linenumbers'),
     'description' => t('Enable visible line numbers'),
     'process callback' => '_linenumbers_filter_linenumbers_process',
-    'default settings' => array(
-      'linenumbers_display' => 0,
-      'linenumbers_elements' => 'p',
+    'default_values' => array(
+      'linenumbers_display_style' => 0,
     ),
     'settings callback' => '_linenumbers_filter_linenumbers_settings',
   );
@@ -32,32 +36,59 @@ function linenumbers_filter_info() {
  * Provide some information about Linenumbers
  */
 function _linenumbers_information() {
-  $information = t('Information about Linenumbers goes here and is very useful.');
+  $information = t('Linenumbers puts numbers on your lines, pretty simple.');
   return $information;
 }
 /**
  * Settings for the 'linenumbers' filter.
  */
-function _linenumbers_filter_linenumbers_settings($form, $form_state, $filter, $format, $defaults) {
-  $settings['linenumbers_display'] = array(
+function _linenumbers_filter_linenumbers_settings($form, &$form_state, $filter, $format, $defaults) {
+  $settings['linenumbers_display_style'] = array(
     '#title' => t('Display style'),
     '#type' => 'select',
     '#options' => array(
       0 => t('inline'),
-      1 => t('block'),
+      1 => t('block'), // Currently block sorta does what linenumbers_display_type should be doing.
     ),
-    '#default_value' => isset($filter->settings['linenumbers_display']) ? $filter->settings['linenumbers_display'] : $defaults['linenumbers_display'],
-    '#description' => t('Display line numbers inline'),
+    '#default_value' => isset($filter->settings['linenumbers_display_style']) ? $filter->settings['linenumbers_display_style'] : $defaults['linenumbers_display_style'],
+    '#description' => t('Choose to display line numbers inline with lines or as a separate block.'),
   ); 
- $settings['linenumbers_elements'] = array(
-    '#title' => t('Choose HTML elements on which to add line numbers.'),
+/**
+ * @todo  Put this setting into action.
+ */
+ /*
+  $settings['linenumbers_display_type'] = array(
+    '#title' => t('Display line numbers on'),
+    '#type' => 'select',
+    '#options' => array(
+      0 => t('Every line'),
+      1 => t('Only on specific elements'),
+    ),
+    '#default_value' => isset($filter->settings['linenumbers_display_type']) ? $filter->settings['linenumbers_display_type'] : $defaults['linenumbers_display_type'],
+    '#description' => t('Display line numbers on every line or only on specific elements like <code>h2</code> or <code>p</code>.'),
+  );
+*/
+
+  $settings['linenumbers_elements'] = array(
+    '#title' => t('Numbered elements'),
     '#type' => 'textfield',
     '#default_value' => 'p',
     '#size' => 30,
-    '#required' => TRUE,
-    '#description' => t('Enter every element which should have a line number in the format: !format', array(
+    '#description' => t('Enter every HTML element which should have a line number in the format: !format', array(
       '!format' => '<code>p,address,li,h2,quote</code>',
     )),
+    // States aren't useful if the trigger isn't working yet.
+    /*
+    '#states' => array(
+      'visible' => array(
+        ':input[name="filters[linenumbers][settings][linenumbers_display_type]"]' => array('value' => '1'),
+      ),
+      'required' => array(
+        ':input[name="filters[linenumbers][settings][linenumbers_display_type]"]' => array('value' => '1'),
+      ),
+    ),
+    */
+    '#default_value' => isset($filter->settings['linenumbers_elements']) ? $filter->settings['linenumbers_elements'] : $defaults['linenumbers_elements'],
   );
 
 /**
@@ -83,55 +114,81 @@ function _linenumbers_filter_linenumbers_settings($form, $form_state, $filter, $
 function _linenumbers_filter_linenumbers_process($text, $filter, $format) {
   $content = ''; // Initialize the content.
   $nums = 1; // Line numbers should start at 1.
-  //$numbered_elements = array(); // Initialize array for elements with numbers.
-  //$block_elements = array('address', 'blockquote','div','dl','fieldset','form','h1','h2','h3','h4','h5','h6','hr','ol','p','pre','table','ul');
-  //preg_match_all('#<([a-z]+|[a-z][0-9]+)(?: .*)?(?<![/|/ ])>#iU', $text, $content);
   
   // Add elements from linenumbers_elements to an array.
   if(isset($filter->settings['linenumbers_elements'])) {
     $numbered_elements = explode(',', $filter->settings['linenumbers_elements']);
   }
+  // Create a new DOM object
+  $lines = new DOMDocument();
+  $lines->loadHTML($text); // Load the $text into $lines
+  $lines_xpath = new DOMXpath($lines); // Create a new Xpath object
 
-  // Inline line numbers
-  if($filter->settings['linenumbers_display'] == 0) {  
+  // Only look at the markup which contains our text.
+  // By default, something like //* would include html and body.
+  $entries = $lines_xpath->evaluate('/html/body/*');
+
+  /**
+   * Inline line numbers
+   */
+  if($filter->settings['linenumbers_display_style'] == 0) {  
     
-    // Not using this stuff anymore, but might be useful.
-    //$lines = explode('<p>', $text); // Explode lines by paragraph. 
-    //$empty_line = array(''); // Create an empty array to diff against.
-    //$lines = array_diff($lines, $empty_line); // Remove false lines from array.
+    $inline_lines = array(); // Initialize array to hold newly numbered lines.
+    foreach($entries as $entry) { // Iterate over each html element.
 
+      // We need to convert to utf8 so that characters like &nbsp;
+      // are displayed properly on output.
+      $utf8_value = utf8_decode($entry->nodeValue);
 
-    //testing
-    $numbered_element_count = count($numbered_elements);
-    $lines = new DOMDocument();
-    $lines->loadHTML($text);
-    $lines_xpath = new DOMXpath($lines);
-    $entries = $lines_xpath->evaluate('/html/body/*');
-
-    $arr = array();
-    foreach($entries as $entry) {
+      // If an element in the Xpath object matches an element defined
+      // on the settings page, prefix it with a line before adding it
+      // to the array. Otherwise, just display it.
       if(in_array($entry->tagName, $numbered_elements)) {
-        $utf8_value = utf8_decode($entry->nodeValue);
-        $arr[] = '<'.$entry->tagName .'>' . $nums . '| ' . $utf8_value . '</' . $entry->tagName . '>';
+        $inline_lines[] = '<'.$entry->tagName .'>' . $nums . '| ' . $utf8_value . '</' . $entry->tagName . '>';
       }
       else {
-        $arr[] = '<' . $entry->tagName . '>' . $utf8_value . '</' . $entry->tagName.'>';
+        $inline_lines[] = '<' . $entry->tagName . '>' . $utf8_value . '</' . $entry->tagName.'>';
       }
       $nums++;
     }
 
-    dsm($arr);
-    foreach($arr as $item) {
-      $content .= $item;
+    // Add each item in the $inline_lines array to $content.
+    foreach($inline_lines as $line) {
+      $content .= $line;
     }
-    //endtesting
 
-    foreach($lines as $line) {
-      //$content .= '<p>' . $nums . '| ' . $line;
-      //$nums++;
-    }
   }
-  dsm($lines);
+
+  /**
+   * Block line numbers
+   */
+  if($filter->settings['linenumbers_display_style'] == 1) {
+    // Get the total count of lines in the text.
+    $total_lines = _total_lines($entries);
+    $block_wrapper_markup = '<div>'; // dat markup.
+    $line_block_markup = '<aside>'; // Will combine markup later.
+
+    // Iterate over every line adding a span so jQuery will have
+    // something to play with.
+    for($i = 1; $i < $total_lines; $i++) {
+      $line_block_markup .= '<span>' . $i . '</span>';
+    }
+    $line_block_markup .= '</aside>'; // More markup to clean up.
+    $content_markup = '<div class="ln_fl">'.$text.'</div>'; // Wrap the text itself in markup.
+    $content = '<div class="linenumbers">' . $line_block_markup . $content_markup . '</div></div>';
+  }
   return $content;
+}
+
+/**
+ * Grabs the total number of lines of text.
+ */
+function _total_lines($xpath_eval) {
+  $total = array();
+  foreach($xpath_eval as $entry) {
+    $total[] = $entry->tagName;  
+  }
+  $total = count($total) + 1;
+  return $total;
 }
 ?>
