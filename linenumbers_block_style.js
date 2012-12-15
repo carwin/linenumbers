@@ -3,8 +3,7 @@
     attach: function(context, settings) {
       var margins = [];
       var elementArray = $('.ln_fl').children().map(function(){
-        console.log($(this));
-        var text_margins = ($(this).css('margin')); 
+        var text_margins = ($(this).css('margin'));
         margins.push(text_margins);
       });
       var numberArray = $('aside').children();

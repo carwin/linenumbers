@@ -13,7 +13,7 @@ function linenumbers_help($path, $arg) {
     case 'admin/help#linenumbers':
       $output = '';
       $output .= '<h3>' . t('About') . '</h3>';
-      $output .= '<p>' . t('Linenumbers creates a field formatter for adding line numbers to Long Text fields. Currently, Nodelines strips html tags from field input and wraps everyting in <code>pre</code> tags, similar to the Plain Text formatter. Plans for development include removing this function to allow html elements to be output with line numbers.') . '</p>';
+      $output .= '<p>' . t('Linenumbers creates a field formatter for adding line numbers to Long Text fields. Currently, Nodelines strips html tags from field input and wraps everyting in <code>pre</code> tags, similar to the Plain Text formatter. Plans for development include removing this function to allow html elements to be output with line numbers.') . '</p><p>It is recommended to disable the line break filter when using this module.</p>';
       return $output;
   }
 }
@@ -68,7 +68,7 @@ function linenumbers_field_formatter_view($entity_type, $entity, $field, $instan
           $value = $i . '| ' . $value;
           $element[$delta]['#markup'] .= $value;
           if ($settings['html_wrapper'] == 'code') {
-            $element[$delta]['#markup'] .= '</code><br />';
+            $element[$delta]['#markup'] .= '</code>';
           }
 
           $i++;

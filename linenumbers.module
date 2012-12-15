@@ -52,7 +52,7 @@ function _linenumbers_filter_linenumbers_settings($form, &$form_state, $filter, 
     ),
     '#default_value' => isset($filter->settings['linenumbers_display_style']) ? $filter->settings['linenumbers_display_style'] : $defaults['linenumbers_display_style'],
     '#description' => t('Choose to display line numbers inline with lines or as a separate block.'),
-  ); 
+  );
 /**
  * @todo  Put this setting into action.
  */
@@ -114,7 +114,7 @@ function _linenumbers_filter_linenumbers_settings($form, &$form_state, $filter, 
 function _linenumbers_filter_linenumbers_process($text, $filter, $format) {
   $content = ''; // Initialize the content.
   $nums = 1; // Line numbers should start at 1.
-  
+
   // Add elements from linenumbers_elements to an array.
   if(isset($filter->settings['linenumbers_elements'])) {
     $numbered_elements = explode(',', $filter->settings['linenumbers_elements']);
@@ -131,8 +131,8 @@ function _linenumbers_filter_linenumbers_process($text, $filter, $format) {
   /**
    * Inline line numbers
    */
-  if($filter->settings['linenumbers_display_style'] == 0) {  
-    
+  if($filter->settings['linenumbers_display_style'] == 0) {
+
     $inline_lines = array(); // Initialize array to hold newly numbered lines.
     foreach($entries as $entry) { // Iterate over each html element.
 
@@ -186,7 +186,7 @@ function _linenumbers_filter_linenumbers_process($text, $filter, $format) {
 function _total_lines($xpath_eval) {
   $total = array();
   foreach($xpath_eval as $entry) {
-    $total[] = $entry->tagName;  
+    $total[] = $entry->tagName;
   }
   $total = count($total) + 1;
   return $total;
